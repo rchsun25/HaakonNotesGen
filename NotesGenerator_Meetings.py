@@ -36,6 +36,12 @@ def watchdog_heartbeat():
         log_event("Watchdog is still running...")
         time.sleep(1800)  # 30 minutes
 
+# Function to convert .m4a to .mp3
+def convert_m4a_to_mp3(m4a_path):
+    mp3_path = os.path.splitext(m4a_path)[0] + ".mp3"
+    ffmpeg.input(m4a_path).output(mp3_path, loglevel="quiet").run(overwrite_output=True)
+    return mp3_path
+
 # UI class for displaying messages to the user
 class UI:
     @staticmethod
@@ -167,7 +173,7 @@ class SummaryGenerator:
         """Generates notes from a transcription using OpenAI."""
         log_event(f"Generating notes for transcription from: {base_path}")
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4.1",
             messages=[{
                 "role": "system",
                 "content": "You are a detailed mechanical engineering notetaker knowledgable about the subject matter. You are creating detailed meeting notes based on a meeting transcript."
@@ -210,7 +216,12 @@ class ProcessingPipeline:
             log_event(f"Started processing file: {file_path}")
 
             base_path = os.path.splitext(file_path)[0]
-            
+
+            if file_path.endswith(".m4a"):
+                log_event(f"Converting .m4a to .mp3: {file_path}")
+                file_path = convert_m4a_to_mp3(file_path)
+                log_event(f"Converted to .mp3: {file_path}")
+
             if file_path.endswith(('.mp4', '.mkv')):
                 log_event(f"Extracting audio from video file: {file_path}")
                 file_path = self.audio_processor.extract_audio(file_path)
@@ -303,7 +314,7 @@ class FileMonitor:
 
     def create_handler(self):
         """Creates a watchdog event handler for supported file patterns."""
-        patterns = ["*.mp4", "*.mkv", "*.mp3", "*.txt", "*.docx"]
+        patterns = ["*.mp4", "*.m4a", "*.mkv", "*.mp3", "*.txt", "*.docx"]
         handler = watchdog.events.PatternMatchingEventHandler(
             patterns=patterns,
             ignore_directories=True,
@@ -346,8 +357,8 @@ class FileMonitor:
                 if not self.observer.is_alive():
                     log_event("Watchdog observer not running - attempting restart")
                     self.start_monitoring()
-                else:
-                    log_event("Monitoring is running...")
+                # else:
+                #     log_event("Monitoring is running...")
 
             except Exception as e:
                 error_msg = f"Monitoring error: {str(e)}"

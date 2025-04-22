@@ -167,14 +167,22 @@ class SummaryGenerator:
         """Generates notes from a transcription using OpenAI."""
         log_event(f"Generating notes for transcription from: {base_path}")
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4.1",
             messages=[{
                 "role": "system",
                 "content": "You are a detailed mechanical engineering notetaker knowledgable about the subject matter. You are creating detailed lecture module notes based on a lecture transcript."
             }, {
                 "role": "user",
-                "content": f"Module Notes: Write comprehensive notes for a lecture module. Include: Module Title: Provide the title of the module. Module Description: Summarize the module's content. Learning Objectives: List the learning objectives. Key Concepts: Detail the key concepts. Detailed Notes: Take detailed notes and include everything. Make this section as long as possible so no details are left out. Examples: Provide examples to illustrate the concepts. Exercises: Include exercises to reinforce learning. References: List any references used.  Use markdown to format your notes. Transcript: {transcription}"
+                "content": f"Module Notes: Write comprehensive notes for a lecture module. Include: Module Title: Provide the title of the module. Module Description: Summarize the module's content. Learning Objectives: List the learning objectives. Key Concepts: Detail the key concepts. Detailed Notes: Take detailed notes and include everything. Make this section as long as possible so no details are left out. Examples: This is a subsection of Detailed Notes. Include any examples, stories, or analogies used to illustrate the concepts here. References: List any references used.  Use markdown to format your notes. Transcript: {transcription}"
             }]
+
+            # messages=[{
+            #     "role": "system",
+            #     "content": "You are a detailed mechanical engineering notetaker knowledgable about the subject matter. You are creating detailed presentation notes based on a presentation transcript."
+            # }, {
+            #     "role": "user",
+            #     "content": f"Presentation Notes: Write comprehensive notes for a presentation. Include: Presentation Title: Provide the title of the presentation. Presentation Description: Summarize the presentation's content. Overview: List the presentation overview. Key Concepts: Detail the key concepts. Detailed Notes: Take detailed notes and include everything. Make this section as long as possible so no details are left out. Use markdown to format your notes. Transcript: {transcription}"
+            # }]
         )
         
         md_path = f"{base_path}_notes.md"
@@ -346,8 +354,8 @@ class FileMonitor:
                 if not self.observer.is_alive():
                     log_event("Watchdog observer not running - attempting restart")
                     self.start_monitoring()
-                else:
-                    log_event("Monitoring is running...")
+                # else:
+                #     log_event("Monitoring is running...")
 
             except Exception as e:
                 error_msg = f"Monitoring error: {str(e)}"
